@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard Pembacaan Sensor</title>
+    <link rel="stylesheet" type="text/css" href="Style.css">
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+
+</head>
+
+<style>
+    body {
+        min-width: 310px;
+        max-width: 800px;
+        height: 400px;
+        margin: 0 auto;
+        background: linear-gradient(to right, #6495ED, #FFA07A);
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+      }
+      
+      .container {
+          background-color: #fff;
+          box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+          padding: 20px;
+          border-radius: 5px;
+          width: 100%;
+          margin-bottom: 20px;
+      }
+      
+      h1,
+      h2 {
+          font-family: Arial;
+          font-size: 2.5rem;
+          text-align: center;
+          margin-bottom: 10px;
+          }
+      
+      #chart-distance {
+          height: 300px;
+          margin-top: 20px;
+          }
+      
+      .indicator {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: gray;
+            transition: background-color 0.3s ease;
+          }
+      table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+      table td, table th {
+            padding: 10px;
+            text-align: left;
+        }
+        
+      table th {
+            background-color: #f2f2f2;
+        }
+</style>
+
+<body>
+
+    <div class="container">
+        <h1>Sistem Monitoring Tangki pembuat pupuk</h1>
+        <h2>Haikal Rivaldi Primayoga</h2>
+        <h2>20524003</h2>
+      </div>
+    
+      <div class="container">
+        <table>
+          <tr>
+              <th>Pembacaan Ukuran</th>
+              <th>Output</th>
+              <th></th>
+          </tr>
+
+          <tr>
+              <td>PPM</td>
+              <td id="ppm">%PPM%</td>
+          </tr>
+
+          <tr>
+            <td>Distance</td>
+            <td id="distance">%DISTANCE%</td>
+        </tr>
+
+        </table>
+        <div id="chart-ppm"></div>
+    
+        <div id="chart-distance"></div>
+      </div>
+    
+      <div class="container">
+    
+        <table>
+            <tr>
+                <th>Output</th>
+                <th>State</th>
+                <th></th>
+            </tr>
+            <tr>
+                <td>LED</td>
+                <td id="ledstatus">%LEDSTATUS%</td>
+            </tr>
+    
+            <tr>
+                <td>Buzzer</td>
+                <td id="buzzerstatus">%BUZZER%</td>
+            </tr>
+
+            <tr>
+              <td>Motor</td>
+              <td id="motorstatus">%MOTOR%</td>
+            </tr>
+    
+            <p></p>
+    
+        </table>
+    
+      </div>
+
+</body>
+
+<script>
+
+    var distanceIndicator = document.getElementById("distance-indicator");
+    var ppmIndicator = document.getElementById("ppm-indicator");
+
+    var chart_Distance = new Highcharts.Chart({
+      chart: { renderTo: 'chart-distance' },
+      title: { text: 'Distance Use Ultrasonic' },
+      series: [{
+        showInLegend: false,
+        data: []
+      }],
+      plotOptions: {
+        line: {
+          animation: false,
+          dataLabels: { enabled: true }
+        },
+        series: { color: '#059e8a' }
+      },
+      xAxis: {
+        type: 'datetime',
+        dateTimeLabelFormats: { second: '%H:%M:%S' }
+      },
+      yAxis: {
+        title: { text: '(Cm)' }
+      },
+      credits: { enabled: false }
+    });
+
+    setInterval(function() {
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          document.getElementById("distance").innerHTML = this.responseText;
+          var x = (new Date()).getTime();
+          var y = parseFloat(this.responseText);
+          var distance_read = y;
+          if (chart_Distance.series[0].data.length > 40) {
+            chart_Distance.series[0].addPoint([x, y], true, true, true);
+          } else {
+            chart_Distance.series[0].addPoint([x, y], true, false, true);
+          }
+
+        }
+      };
+      xhttp.open("GET", "/distance", true);
+      xhttp.send();
+    }, 5000);
+
+    var chart_ppm = new Highcharts.Chart({
+        chart: { renderTo: 'chart-ppm' },
+        title: { text: 'PPM use MQ135' },
+        series: [{
+          showInLegend: false,
+          data: []
+        }],
+        plotOptions: {
+          line: {
+            animation: false,
+            dataLabels: { enabled: true }
+          },
+          series: { color: '#059e8a' }
+        },
+        xAxis: {
+          type: 'datetime',
+          dateTimeLabelFormats: { second: '%H:%M:%S' }
+        },
+        yAxis: {
+          title: { text: '(ppm)' }
+        },
+        credits: { enabled: false }
+      });
+  
+      setInterval(function() {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+          if (this.readyState == 4 && this.status == 200) {
+            document.getElementById("ppm").innerHTML = this.responseText;
+            var x = (new Date()).getTime();
+            var y = parseFloat(this.responseText);
+            var PPM_Read = y;
+            if (chart_ppm.series[0].data.length > 40) {
+                chart_ppm.series[0].addPoint([x, y], true, true, true);
+            } else {
+              chart_ppm.series[0].addPoint([x, y], true, false, true);
+            }
+          }
+        };
+        xhttp.open("GET", "/ppm", true);
+        xhttp.send();
+      }, 5000);
+
+    setInterval(function() {
+        var xhttp = new XMLHttpRequest();
+          xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+              document.getElementById("ledstatus").innerHTML = this.responseText;
+              }
+            };
+        xhttp.open("GET", "/ledstatus", true);
+        xhttp.send();
+      }, 1000);
+
+      setInterval(function() {
+        var xhttp = new XMLHttpRequest();
+          xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+              document.getElementById("buzzerstatus").innerHTML = this.responseText;
+              }
+            };
+        xhttp.open("GET", "/buzzerstatus", true);
+        xhttp.send();
+      }, 1000);
+
+      setInterval(function() {
+        var xhttp = new XMLHttpRequest();
+          xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+              document.getElementById("motorstatus").innerHTML = this.responseText;
+              }
+            };
+        xhttp.open("GET", "/motorstatus", true);
+        xhttp.send();
+      }, 1000);
+
+</script>
